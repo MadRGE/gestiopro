@@ -15,6 +15,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Store, Loader2 } from "lucide-react";
 
 interface Rubro {
@@ -29,6 +36,7 @@ export default function RegistroPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [rubros, setRubros] = useState<Rubro[]>([]);
+  const [rubroId, setRubroId] = useState("");
 
   useEffect(() => {
     fetch("/api/rubros")
@@ -50,7 +58,7 @@ export default function RegistroPage() {
       email: formData.get("email"),
       password: formData.get("password"),
       negocioNombre: formData.get("negocioNombre"),
-      rubroId: formData.get("rubroId"),
+      rubroId,
     };
 
     const confirmPassword = formData.get("confirmPassword");
@@ -168,19 +176,18 @@ export default function RegistroPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="rubroId">Rubro</Label>
-              <select
-                id="rubroId"
-                name="rubroId"
-                required
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <option value="">Seleccioná un rubro</option>
-                {rubros.map((rubro) => (
-                  <option key={rubro.id} value={rubro.id}>
-                    {rubro.nombre}
-                  </option>
-                ))}
-              </select>
+              <Select value={rubroId} onValueChange={setRubroId} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccioná un rubro" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rubros.map((rubro) => (
+                    <SelectItem key={rubro.id} value={rubro.id}>
+                      {rubro.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
