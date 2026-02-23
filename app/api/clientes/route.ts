@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthSession } from "@/lib/auth-api";
+import { clienteCreateSchema } from "@/lib/validations";
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,19 +10,33 @@ export async function GET(req: NextRequest) {
     const { negocioId } = result;
 
     const search = req.nextUrl.searchParams.get("search") || "";
+    const page = Math.max(1, Number(req.nextUrl.searchParams.get("page")) || 1);
+    const limit = Math.max(1, Math.min(50, Number(req.nextUrl.searchParams.get("limit")) || 20));
 
-    const clientes = await prisma.cliente.findMany({
-      where: {
-        negocioId,
-        activo: true,
-        ...(search
-          ? { nombre: { contains: search, mode: "insensitive" as const } }
-          : {}),
-      },
-      orderBy: { nombre: "asc" },
+    const where = {
+      negocioId,
+      activo: true,
+      ...(search
+        ? { nombre: { contains: search, mode: "insensitive" as const } }
+        : {}),
+    };
+
+    const [clientes, total] = await Promise.all([
+      prisma.cliente.findMany({
+        where,
+        orderBy: { nombre: "asc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.cliente.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      clientes,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
     });
-
-    return NextResponse.json(clientes);
   } catch {
     return NextResponse.json(
       { error: "Error al obtener clientes" },
@@ -37,20 +52,17 @@ export async function POST(req: Request) {
     const { negocioId } = result;
 
     const body = await req.json();
-    const { nombre, telefono, email } = body;
-
-    if (!nombre || !nombre.trim()) {
-      return NextResponse.json(
-        { error: "El nombre es requerido" },
-        { status: 400 }
-      );
+    const parsed = clienteCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
+    const { nombre, telefono, email } = parsed.data;
 
     const cliente = await prisma.cliente.create({
       data: {
-        nombre: nombre.trim(),
-        telefono: telefono?.trim() || null,
-        email: email?.trim() || null,
+        nombre,
+        telefono,
+        email,
         negocioId,
       },
     });

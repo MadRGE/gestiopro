@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthSession, requireRole } from "@/lib/auth-api";
+import { clienteUpdateSchema } from "@/lib/validations";
 
 export async function PUT(
   req: Request,
@@ -16,14 +17,11 @@ export async function PUT(
 
     const { id } = await params;
     const body = await req.json();
-    const { nombre, telefono, email } = body;
-
-    if (!nombre || !nombre.trim()) {
-      return NextResponse.json(
-        { error: "El nombre es requerido" },
-        { status: 400 }
-      );
+    const parsed = clienteUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
+    const { nombre, telefono, email } = parsed.data;
 
     const existing = await prisma.cliente.findFirst({
       where: { id, negocioId },
@@ -39,9 +37,9 @@ export async function PUT(
     const cliente = await prisma.cliente.update({
       where: { id },
       data: {
-        nombre: nombre.trim(),
-        telefono: telefono?.trim() || null,
-        email: email?.trim() || null,
+        nombre,
+        telefono,
+        email,
       },
     });
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthSession } from "@/lib/auth-api";
+import { cajaAbrirSchema } from "@/lib/validations";
 
 export async function GET() {
   try {
@@ -49,7 +50,11 @@ export async function POST(req: Request) {
     const { negocioId, userId } = result;
 
     const body = await req.json();
-    const { montoInicial } = body;
+    const parsed = cajaAbrirSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+    }
+    const { montoInicial } = parsed.data;
 
     // Check no open session exists
     const existing = await prisma.cajaSesion.findFirst({
@@ -65,7 +70,7 @@ export async function POST(req: Request) {
 
     const sesion = await prisma.cajaSesion.create({
       data: {
-        montoInicial: montoInicial ? parseFloat(montoInicial) : 0,
+        montoInicial: typeof montoInicial === "string" ? parseFloat(montoInicial) : montoInicial,
         negocioId,
         usuarioId: userId,
       },

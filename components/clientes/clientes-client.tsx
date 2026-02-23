@@ -10,6 +10,7 @@ import { ClienteTable } from "./cliente-table";
 import { ClienteCards } from "./cliente-cards";
 import { ClienteDialog } from "./cliente-dialog";
 import { ClienteDeleteDialog } from "./cliente-delete-dialog";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 interface Cliente {
   id: string;
@@ -23,6 +24,8 @@ export function ClientesClient() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
@@ -31,17 +34,19 @@ export function ClientesClient() {
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
-      const qs = params.toString();
-      const res = await fetch(`/api/clientes${qs ? `?${qs}` : ""}`);
+      params.set("page", String(page));
+      params.set("limit", "20");
+      const res = await fetch(`/api/clientes?${params.toString()}`);
       if (!res.ok) throw new Error("Error al cargar clientes");
       const data = await res.json();
-      setClientes(data);
+      setClientes(data.clientes);
+      setTotalPages(data.totalPages);
     } catch {
       toast.error("Error al cargar clientes");
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [search, page]);
 
   useEffect(() => {
     fetchClientes();
@@ -74,6 +79,7 @@ export function ClientesClient() {
 
   function handleSearchChange(value: string) {
     setSearch(value);
+    setPage(1);
     setLoading(true);
   }
 
@@ -133,6 +139,8 @@ export function ClientesClient() {
           />
         </>
       )}
+
+      <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
 
       <ClienteDialog
         open={dialogOpen}

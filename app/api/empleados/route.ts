@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthSession, requireRole } from "@/lib/auth-api";
 import bcrypt from "bcryptjs";
+import { empleadoCreateSchema } from "@/lib/validations";
 
 export async function GET() {
   try {
@@ -37,21 +38,11 @@ export async function POST(req: Request) {
     if (denied) return denied;
 
     const body = await req.json();
-    const { nombre, email, password, rol: nuevoRol } = body;
-
-    if (!nombre || !email || !password) {
-      return NextResponse.json(
-        { error: "Nombre, email y contraseña son obligatorios" },
-        { status: 400 }
-      );
+    const parsed = empleadoCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
-
-    if (nuevoRol && nuevoRol !== "EMPLEADO") {
-      return NextResponse.json(
-        { error: "Solo se pueden crear empleados" },
-        { status: 400 }
-      );
-    }
+    const { nombre, email, password } = parsed.data;
 
     const existing = await prisma.usuario.findUnique({ where: { email } });
     if (existing) {

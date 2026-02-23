@@ -12,6 +12,7 @@ import { CajaResumen } from "./caja-resumen";
 import { CajaAbrirDialog } from "./caja-abrir-dialog";
 import { CajaCerrarDialog } from "./caja-cerrar-dialog";
 import { CajaMovimientoDialog } from "./caja-movimiento-dialog";
+import { CajaHistorial } from "./caja-historial";
 
 interface Movimiento {
   id: string;
@@ -87,7 +88,7 @@ export function CajaClient() {
   // No open session
   if (!sesion) {
     return (
-      <>
+      <div className="space-y-6">
         <div className="flex flex-col items-center justify-center gap-4 py-16">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
             <Lock className="h-8 w-8 text-muted-foreground" />
@@ -109,7 +110,9 @@ export function CajaClient() {
           onOpenChange={setAbrirOpen}
           onSuccess={handleAbrirSuccess}
         />
-      </>
+
+        <CajaHistorial />
+      </div>
     );
   }
 
@@ -132,7 +135,7 @@ export function CajaClient() {
   });
 
   return (
-    <>
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Badge variant="default">Abierta</Badge>
@@ -220,6 +223,8 @@ export function CajaClient() {
         onOpenChange={setMovimientoOpen}
         onSuccess={handleMovimientoSuccess}
       />
-    </>
+
+      <CajaHistorial />
+    </div>
   );
 }

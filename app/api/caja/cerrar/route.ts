@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthSession } from "@/lib/auth-api";
+import { cajaCerrarSchema } from "@/lib/validations";
 
 export async function POST(req: Request) {
   try {
@@ -9,14 +10,11 @@ export async function POST(req: Request) {
     const { negocioId } = result;
 
     const body = await req.json();
-    const { montoFinal } = body;
-
-    if (montoFinal === undefined || montoFinal === null) {
-      return NextResponse.json(
-        { error: "Debe ingresar el monto final" },
-        { status: 400 }
-      );
+    const parsed = cajaCerrarSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
+    const { montoFinal } = parsed.data;
 
     const sesion = await prisma.cajaSesion.findFirst({
       where: { negocioId, estado: "ABIERTA" },
@@ -53,7 +51,7 @@ export async function POST(req: Request) {
 
     const montoInicialNum = Number(sesion.montoInicial);
     const esperado = montoInicialNum + ventasEfectivo + ingresos - egresos;
-    const montoFinalNum = parseFloat(montoFinal);
+    const montoFinalNum = typeof montoFinal === "string" ? parseFloat(montoFinal) : montoFinal;
     const diferencia = montoFinalNum - esperado;
 
     const updated = await prisma.cajaSesion.update({

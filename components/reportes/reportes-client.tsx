@@ -11,6 +11,9 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/formatters";
+import { generateCSV, downloadCSV } from "@/lib/csv";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 import { ChartVentasDiarias } from "./chart-ventas-diarias";
 import { ChartMetodosPago } from "./chart-metodos-pago";
 import { ChartTopProductos } from "./chart-top-productos";
@@ -59,15 +62,52 @@ export function ReportesClient() {
 
   return (
     <div className="space-y-6">
-      <Select value={dias} onValueChange={setDias}>
-        <SelectTrigger className="w-48">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="7">Últimos 7 días</SelectItem>
-          <SelectItem value="30">Últimos 30 días</SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="flex items-center gap-3">
+        <Select value={dias} onValueChange={setDias}>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="7">Últimos 7 días</SelectItem>
+            <SelectItem value="30">Últimos 30 días</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          variant="outline"
+          disabled={loading || !data}
+          onClick={() => {
+            if (!data) return;
+            const rows: string[][] = [];
+            rows.push(["=== RESUMEN ==="]);
+            rows.push(["Total vendido", formatCurrency(data.resumen.total)]);
+            rows.push(["Transacciones", String(data.resumen.cantidad)]);
+            rows.push(["Ticket promedio", formatCurrency(data.resumen.promedio)]);
+            rows.push([]);
+            rows.push(["=== VENTAS POR DÍA ==="]);
+            rows.push(["Fecha", "Total", "Cantidad"]);
+            data.ventasPorDia.forEach((v) =>
+              rows.push([v.fecha, formatCurrency(v.total), String(v.cantidad)])
+            );
+            rows.push([]);
+            rows.push(["=== POR MÉTODO DE PAGO ==="]);
+            rows.push(["Método", "Total", "Cantidad"]);
+            data.porMetodoPago.forEach((m) =>
+              rows.push([m.metodo, formatCurrency(m.total), String(m.cantidad)])
+            );
+            rows.push([]);
+            rows.push(["=== TOP PRODUCTOS ==="]);
+            rows.push(["Producto", "Cantidad vendida", "Total vendido"]);
+            data.topProductos.forEach((p) =>
+              rows.push([p.nombre, String(p.cantidadVendida), formatCurrency(p.totalVendido)])
+            );
+            const csv = generateCSV(["Reporte de ventas"], rows);
+            downloadCSV(`reporte-${dias}dias.csv`, csv);
+          }}
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Descargar CSV
+        </Button>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>

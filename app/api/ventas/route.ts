@@ -1,24 +1,58 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthSession } from "@/lib/auth-api";
+import { ventaCreateSchema } from "@/lib/validations";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const result = await getAuthSession();
     if ("error" in result) return result.error;
     const { negocioId } = result;
 
-    const ventas = await prisma.venta.findMany({
-      where: { negocioId },
-      include: {
-        vendedor: { select: { nombre: true } },
-        cliente: { select: { nombre: true } },
-        _count: { select: { items: true } },
-      },
-      orderBy: { creadoEl: "desc" },
-    });
+    const { searchParams } = new URL(req.url);
+    const page = Math.max(1, Number(searchParams.get("page")) || 1);
+    const limit = Math.max(1, Math.min(50, Number(searchParams.get("limit")) || 20));
+    const desde = searchParams.get("desde");
+    const hasta = searchParams.get("hasta");
+    const metodoPago = searchParams.get("metodoPago");
+    const estado = searchParams.get("estado");
 
-    return NextResponse.json(ventas);
+    const where: Record<string, unknown> = { negocioId };
+
+    if (desde || hasta) {
+      const creadoEl: Record<string, Date> = {};
+      if (desde) creadoEl.gte = new Date(desde);
+      if (hasta) {
+        const hastaDate = new Date(hasta);
+        hastaDate.setHours(23, 59, 59, 999);
+        creadoEl.lte = hastaDate;
+      }
+      where.creadoEl = creadoEl;
+    }
+    if (metodoPago) where.metodoPago = metodoPago;
+    if (estado) where.estado = estado;
+
+    const [ventas, total] = await Promise.all([
+      prisma.venta.findMany({
+        where,
+        include: {
+          vendedor: { select: { nombre: true } },
+          cliente: { select: { nombre: true } },
+          _count: { select: { items: true } },
+        },
+        orderBy: { creadoEl: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.venta.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      ventas,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch {
     return NextResponse.json(
       { error: "Error al obtener ventas" },
@@ -34,14 +68,11 @@ export async function POST(req: Request) {
     const { session, negocioId } = result;
 
     const body = await req.json();
-    const { items, metodoPago, clienteId, descuento } = body;
-
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json(
-        { error: "Debe incluir al menos un item" },
-        { status: 400 }
-      );
+    const parsed = ventaCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
+    const { items, metodoPago, clienteId, descuento } = parsed.data;
 
     const venta = await prisma.$transaction(async (tx) => {
       // Auto-numerar
@@ -89,7 +120,7 @@ export async function POST(req: Request) {
       }
 
       // Apply discount
-      const descuentoNum = descuento ? parseFloat(descuento) : 0;
+      const descuentoNum = descuento ? Number(descuento) : 0;
       const totalFinal = Math.max(0, total - descuentoNum);
 
       // Crear venta con items

@@ -18,6 +18,7 @@ import { ProductoCards } from "./producto-cards";
 import { ProductoDialog } from "./producto-dialog";
 import { ProductoDeleteDialog } from "./producto-delete-dialog";
 import { ProductoEmptyState } from "./producto-empty-state";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 interface Producto {
   id: string;
@@ -45,6 +46,8 @@ export function ProductosClient() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [categoriaFilter, setCategoriaFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProducto, setSelectedProducto] = useState<Producto | null>(null);
@@ -54,17 +57,19 @@ export function ProductosClient() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (categoriaFilter) params.set("categoriaId", categoriaFilter);
-      const qs = params.toString();
-      const res = await fetch(`/api/productos${qs ? `?${qs}` : ""}`);
+      params.set("page", String(page));
+      params.set("limit", "20");
+      const res = await fetch(`/api/productos?${params.toString()}`);
       if (!res.ok) throw new Error("Error al cargar productos");
       const data = await res.json();
-      setProductos(data);
+      setProductos(data.productos);
+      setTotalPages(data.totalPages);
     } catch {
       toast.error("Error al cargar productos");
     } finally {
       setLoading(false);
     }
-  }, [search, categoriaFilter]);
+  }, [search, categoriaFilter, page]);
 
   useEffect(() => {
     fetchProductos();
@@ -106,6 +111,7 @@ export function ProductosClient() {
 
   function handleSearchChange(value: string) {
     setSearch(value);
+    setPage(1);
     setLoading(true);
   }
 
@@ -137,6 +143,7 @@ export function ProductosClient() {
               value={categoriaFilter || "all"}
               onValueChange={(v) => {
                 setCategoriaFilter(v === "all" ? "" : v);
+                setPage(1);
                 setLoading(true);
               }}
             >
@@ -180,6 +187,8 @@ export function ProductosClient() {
           />
         </>
       )}
+
+      <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
 
       <ProductoDialog
         open={dialogOpen}

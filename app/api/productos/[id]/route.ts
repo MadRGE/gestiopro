@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthSession, requireRole } from "@/lib/auth-api";
+import { productoUpdateSchema } from "@/lib/validations";
 
 export async function PUT(
   req: Request,
@@ -28,14 +29,11 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { nombre, descripcion, codigoBarras, precioCompra, precioVenta, stock, stockMinimo, unidad, categoriaId } = body;
-
-    if (!nombre || precioVenta === undefined || precioVenta === null) {
-      return NextResponse.json(
-        { error: "Nombre y precio de venta son obligatorios" },
-        { status: 400 }
-      );
+    const parsed = productoUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
+    const { nombre, descripcion, codigoBarras, precioCompra, precioVenta, stock, stockMinimo, unidad, categoriaId } = parsed.data;
 
     const producto = await prisma.producto.update({
       where: { id },
@@ -43,11 +41,11 @@ export async function PUT(
         nombre,
         descripcion: descripcion || null,
         codigoBarras: codigoBarras || null,
-        precioCompra: precioCompra || 0,
+        precioCompra,
         precioVenta,
         stock: stock ?? existing.stock,
         stockMinimo: stockMinimo ?? existing.stockMinimo,
-        unidad: unidad || "unidad",
+        unidad,
         categoriaId: categoriaId !== undefined ? (categoriaId || null) : existing.categoriaId,
       },
     });
