@@ -22,7 +22,9 @@ interface Producto {
   stock: number;
   stockMinimo: number;
   unidad: string;
+  categoriaId: string | null;
   activo: boolean;
+  categoria?: { nombre: string } | null;
 }
 
 interface ProductoCardsProps {
@@ -42,8 +44,13 @@ export function ProductoCards({ productos, onEdit, onDelete }: ProductoCardsProp
           <Card key={producto.id}>
             <CardContent className="flex items-center justify-between p-4">
               <div className="min-w-0 flex-1 space-y-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-medium truncate">{producto.nombre}</p>
+                  {producto.categoria && (
+                    <Badge variant="outline" className="shrink-0">
+                      {producto.categoria.nombre}
+                    </Badge>
+                  )}
                   <Badge
                     variant={producto.activo ? "default" : "secondary"}
                     className="shrink-0"

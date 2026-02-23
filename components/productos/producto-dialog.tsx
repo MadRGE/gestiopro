@@ -30,6 +30,12 @@ interface Producto {
   stock: number;
   stockMinimo: number;
   unidad: string;
+  categoriaId?: string | null;
+}
+
+interface Categoria {
+  id: string;
+  nombre: string;
 }
 
 interface ProductoDialogProps {
@@ -65,11 +71,18 @@ export function ProductoDialog({
   const [stock, setStock] = useState("");
   const [stockMinimo, setStockMinimo] = useState("");
   const [unidad, setUnidad] = useState("unidad");
+  const [categoriaId, setCategoriaId] = useState("");
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (open) {
+      fetch("/api/categorias")
+        .then((r) => r.json())
+        .then((data) => { if (Array.isArray(data)) setCategorias(data); })
+        .catch(() => {});
+
       if (producto) {
         setNombre(producto.nombre);
         setDescripcion(producto.descripcion || "");
@@ -79,6 +92,7 @@ export function ProductoDialog({
         setStock(String(producto.stock));
         setStockMinimo(String(producto.stockMinimo));
         setUnidad(producto.unidad);
+        setCategoriaId(producto.categoriaId || "");
       } else {
         setNombre("");
         setDescripcion("");
@@ -88,6 +102,7 @@ export function ProductoDialog({
         setStock("");
         setStockMinimo("");
         setUnidad("unidad");
+        setCategoriaId("");
       }
       setError("");
     }
@@ -107,6 +122,7 @@ export function ProductoDialog({
       stock: stock ? parseInt(stock) : 0,
       stockMinimo: stockMinimo ? parseInt(stockMinimo) : 0,
       unidad,
+      categoriaId: categoriaId || null,
     };
 
     try {
@@ -235,20 +251,43 @@ export function ProductoDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="unidad">Unidad</Label>
-            <Select value={unidad} onValueChange={setUnidad}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {UNIDADES.map((u) => (
-                  <SelectItem key={u.value} value={u.value}>
-                    {u.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="unidad">Unidad</Label>
+              <Select value={unidad} onValueChange={setUnidad}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {UNIDADES.map((u) => (
+                    <SelectItem key={u.value} value={u.value}>
+                      {u.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {categorias.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="categoria">Categoría</Label>
+                <Select
+                  value={categoriaId || "none"}
+                  onValueChange={(v) => setCategoriaId(v === "none" ? "" : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sin categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin categoría</SelectItem>
+                    {categorias.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-2">

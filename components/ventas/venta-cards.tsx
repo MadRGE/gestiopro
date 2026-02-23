@@ -14,6 +14,7 @@ interface Venta {
   estado: string;
   creadoEl: string;
   vendedor: { nombre: string };
+  cliente?: { nombre: string } | null;
   _count: { items: number };
 }
 
@@ -72,7 +73,9 @@ export function VentaCards({ ventas, onCancel }: VentaCardsProps) {
                 <span>{formatDate(venta.creadoEl)}</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                {venta.vendedor.nombre} &middot; {venta._count.items} item(s)
+                {venta.vendedor.nombre}
+                {venta.cliente && <> &middot; {venta.cliente.nombre}</>}
+                {" "}&middot; {venta._count.items} item(s)
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-1">

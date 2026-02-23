@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession } from "@/lib/auth-api";
+import { getAuthSession, requireRole } from "@/lib/auth-api";
 
 export async function PUT(
   req: Request,
@@ -9,7 +9,11 @@ export async function PUT(
   try {
     const result = await getAuthSession();
     if ("error" in result) return result.error;
-    const { negocioId } = result;
+    const { negocioId, rol } = result;
+
+    const denied = requireRole(rol, "DUENIO");
+    if (denied) return denied;
+
     const { id } = await params;
 
     const existing = await prisma.producto.findFirst({
@@ -24,7 +28,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { nombre, descripcion, codigoBarras, precioCompra, precioVenta, stock, stockMinimo, unidad } = body;
+    const { nombre, descripcion, codigoBarras, precioCompra, precioVenta, stock, stockMinimo, unidad, categoriaId } = body;
 
     if (!nombre || precioVenta === undefined || precioVenta === null) {
       return NextResponse.json(
@@ -44,6 +48,7 @@ export async function PUT(
         stock: stock ?? existing.stock,
         stockMinimo: stockMinimo ?? existing.stockMinimo,
         unidad: unidad || "unidad",
+        categoriaId: categoriaId !== undefined ? (categoriaId || null) : existing.categoriaId,
       },
     });
 
@@ -63,7 +68,11 @@ export async function DELETE(
   try {
     const result = await getAuthSession();
     if ("error" in result) return result.error;
-    const { negocioId } = result;
+    const { negocioId, rol } = result;
+
+    const denied = requireRole(rol, "DUENIO");
+    if (denied) return denied;
+
     const { id } = await params;
 
     const existing = await prisma.producto.findFirst({

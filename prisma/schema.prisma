@@ -66,10 +66,11 @@ model Usuario {
   creadoEl      DateTime  @default(now()) @map("creado_el")
   actualizadoEl DateTime  @updatedAt @map("actualizado_el")
 
-  negocio  Negocio?  @relation(fields: [negocioId], references: [id])
-  accounts Account[]
-  sessions Session[]
-  ventas   Venta[]
+  negocio     Negocio?     @relation(fields: [negocioId], references: [id])
+  accounts    Account[]
+  sessions    Session[]
+  ventas      Venta[]
+  cajasSesion CajaSesion[]
 
   @@map("usuarios")
 }
@@ -106,10 +107,13 @@ model Negocio {
   creadoEl      DateTime @default(now()) @map("creado_el")
   actualizadoEl DateTime @updatedAt @map("actualizado_el")
 
-  rubro     Rubro      @relation(fields: [rubroId], references: [id])
-  usuarios  Usuario[]
-  productos Producto[]
-  ventas    Venta[]
+  rubro       Rubro        @relation(fields: [rubroId], references: [id])
+  usuarios    Usuario[]
+  productos   Producto[]
+  ventas      Venta[]
+  categorias  Categoria[]
+  clientes    Cliente[]
+  cajasSesion CajaSesion[]
 
   @@map("negocios")
 }
@@ -131,6 +135,7 @@ model Producto {
   actualizadoEl DateTime @updatedAt @map("actualizado_el")
 
   negocio    Negocio     @relation(fields: [negocioId], references: [id])
+  categoria  Categoria?  @relation(fields: [categoriaId], references: [id])
   itemsVenta ItemVenta[]
 
   @@index([negocioId])
@@ -142,14 +147,17 @@ model Venta {
   id            String      @id @default(cuid())
   numero        Int
   total         Decimal     @db.Decimal(12, 2)
+  descuento     Decimal     @default(0) @db.Decimal(12, 2)
   metodoPago    MetodoPago  @default(EFECTIVO) @map("metodo_pago")
   estado        EstadoVenta @default(COMPLETADA)
   negocioId     String      @map("negocio_id")
   vendedorId    String      @map("vendedor_id")
+  clienteId     String?     @map("cliente_id")
   creadoEl      DateTime    @default(now()) @map("creado_el")
 
   negocio  Negocio     @relation(fields: [negocioId], references: [id])
   vendedor Usuario     @relation(fields: [vendedorId], references: [id])
+  cliente  Cliente?    @relation(fields: [clienteId], references: [id])
   items    ItemVenta[]
 
   @@index([negocioId])
@@ -183,4 +191,88 @@ enum EstadoVenta {
   COMPLETADA
   CANCELADA
   PENDIENTE
+}
+
+// ==========================================
+// Categorías
+// ==========================================
+
+model Categoria {
+  id        String   @id @default(cuid())
+  nombre    String
+  negocioId String   @map("negocio_id")
+  activo    Boolean  @default(true)
+  creadoEl  DateTime @default(now()) @map("creado_el")
+
+  negocio   Negocio    @relation(fields: [negocioId], references: [id])
+  productos Producto[]
+
+  @@index([negocioId])
+  @@map("categorias")
+}
+
+// ==========================================
+// Clientes
+// ==========================================
+
+model Cliente {
+  id        String   @id @default(cuid())
+  nombre    String
+  telefono  String?
+  email     String?
+  negocioId String   @map("negocio_id")
+  activo    Boolean  @default(true)
+  creadoEl  DateTime @default(now()) @map("creado_el")
+
+  negocio Negocio @relation(fields: [negocioId], references: [id])
+  ventas  Venta[]
+
+  @@index([negocioId])
+  @@map("clientes")
+}
+
+// ==========================================
+// Caja
+// ==========================================
+
+model CajaSesion {
+  id           String     @id @default(cuid())
+  negocioId    String     @map("negocio_id")
+  usuarioId    String     @map("usuario_id")
+  montoInicial Decimal    @default(0) @map("monto_inicial") @db.Decimal(12, 2)
+  montoFinal   Decimal?   @map("monto_final") @db.Decimal(12, 2)
+  estado       EstadoCaja @default(ABIERTA)
+  abiertaEl    DateTime   @default(now()) @map("abierta_el")
+  cerradaEl    DateTime?  @map("cerrada_el")
+
+  negocio     Negocio          @relation(fields: [negocioId], references: [id])
+  usuario     Usuario          @relation(fields: [usuarioId], references: [id])
+  movimientos MovimientoCaja[]
+
+  @@index([negocioId])
+  @@map("cajas_sesion")
+}
+
+model MovimientoCaja {
+  id           String         @id @default(cuid())
+  cajaSesionId String         @map("caja_sesion_id")
+  tipo         TipoMovimiento
+  monto        Decimal        @db.Decimal(12, 2)
+  descripcion  String?
+  creadoEl     DateTime       @default(now()) @map("creado_el")
+
+  cajaSesion CajaSesion @relation(fields: [cajaSesionId], references: [id])
+
+  @@index([cajaSesionId])
+  @@map("movimientos_caja")
+}
+
+enum EstadoCaja {
+  ABIERTA
+  CERRADA
+}
+
+enum TipoMovimiento {
+  INGRESO
+  EGRESO
 }

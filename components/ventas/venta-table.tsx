@@ -21,6 +21,7 @@ interface Venta {
   estado: string;
   creadoEl: string;
   vendedor: { nombre: string };
+  cliente?: { nombre: string } | null;
   _count: { items: number };
 }
 
@@ -61,6 +62,7 @@ export function VentaTable({ ventas, onCancel }: VentaTableProps) {
             <TableHead>Total</TableHead>
             <TableHead>Método</TableHead>
             <TableHead>Estado</TableHead>
+            <TableHead>Cliente</TableHead>
             <TableHead>Fecha</TableHead>
             <TableHead>Vendedor</TableHead>
             <TableHead className="w-[80px]" />
@@ -85,6 +87,7 @@ export function VentaTable({ ventas, onCancel }: VentaTableProps) {
                     : "Pendiente"}
                 </Badge>
               </TableCell>
+              <TableCell>{venta.cliente?.nombre || "-"}</TableCell>
               <TableCell>{formatDate(venta.creadoEl)}</TableCell>
               <TableCell>{venta.vendedor.nombre}</TableCell>
               <TableCell>

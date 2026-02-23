@@ -21,9 +21,10 @@ interface HeaderProps {
     email?: string | null;
     image?: string | null;
   };
+  rol: string;
 }
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user, rol }: HeaderProps) {
   const { theme, setTheme } = useTheme();
 
   const initials = user.name
@@ -45,7 +46,7 @@ export function Header({ user }: HeaderProps) {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0">
-            <MobileSidebar />
+            <MobileSidebar rol={rol} />
           </SheetContent>
         </Sheet>
         <h2 className="text-lg font-semibold hidden sm:block">

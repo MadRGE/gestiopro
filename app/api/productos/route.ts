@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession } from "@/lib/auth-api";
+import { getAuthSession, requireRole } from "@/lib/auth-api";
 
 export async function GET(req: Request) {
   try {
@@ -10,6 +10,7 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
+    const categoriaId = searchParams.get("categoriaId") || "";
 
     const productos = await prisma.producto.findMany({
       where: {
@@ -18,6 +19,10 @@ export async function GET(req: Request) {
         ...(search
           ? { nombre: { contains: search, mode: "insensitive" as const } }
           : {}),
+        ...(categoriaId ? { categoriaId } : {}),
+      },
+      include: {
+        categoria: { select: { nombre: true } },
       },
       orderBy: { creadoEl: "desc" },
     });
@@ -35,10 +40,13 @@ export async function POST(req: Request) {
   try {
     const result = await getAuthSession();
     if ("error" in result) return result.error;
-    const { negocioId } = result;
+    const { negocioId, rol } = result;
+
+    const denied = requireRole(rol, "DUENIO");
+    if (denied) return denied;
 
     const body = await req.json();
-    const { nombre, descripcion, codigoBarras, precioCompra, precioVenta, stock, stockMinimo, unidad } = body;
+    const { nombre, descripcion, codigoBarras, precioCompra, precioVenta, stock, stockMinimo, unidad, categoriaId } = body;
 
     if (!nombre || precioVenta === undefined || precioVenta === null) {
       return NextResponse.json(
@@ -57,6 +65,7 @@ export async function POST(req: Request) {
         stock: stock || 0,
         stockMinimo: stockMinimo || 0,
         unidad: unidad || "unidad",
+        categoriaId: categoriaId || null,
         negocioId,
       },
     });

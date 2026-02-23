@@ -16,6 +16,8 @@ interface Producto {
 export function PosClient() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [metodoPago, setMetodoPago] = useState("EFECTIVO");
+  const [clienteId, setClienteId] = useState("");
+  const [descuento, setDescuento] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
 
@@ -82,6 +84,8 @@ export function PosClient() {
             precio: i.precio,
           })),
           metodoPago,
+          clienteId: clienteId || null,
+          descuento: descuento || 0,
         }),
       });
 
@@ -111,10 +115,14 @@ export function PosClient() {
         <PosCart
           items={items}
           metodoPago={metodoPago}
+          clienteId={clienteId}
+          descuento={descuento}
           submitting={submitting}
           onUpdateCantidad={handleUpdateCantidad}
           onRemove={handleRemove}
           onMetodoPagoChange={setMetodoPago}
+          onClienteChange={setClienteId}
+          onDescuentoChange={setDescuento}
           onSubmit={handleSubmit}
         />
       </div>

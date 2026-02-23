@@ -29,7 +29,9 @@ interface Producto {
   stock: number;
   stockMinimo: number;
   unidad: string;
+  categoriaId: string | null;
   activo: boolean;
+  categoria?: { nombre: string } | null;
 }
 
 interface ProductoTableProps {
@@ -45,6 +47,7 @@ export function ProductoTable({ productos, onEdit, onDelete }: ProductoTableProp
         <TableHeader>
           <TableRow>
             <TableHead>Nombre</TableHead>
+            <TableHead>Categoría</TableHead>
             <TableHead>Precio Venta</TableHead>
             <TableHead>Stock</TableHead>
             <TableHead>Estado</TableHead>
@@ -59,6 +62,13 @@ export function ProductoTable({ productos, onEdit, onDelete }: ProductoTableProp
             return (
               <TableRow key={producto.id}>
                 <TableCell className="font-medium">{producto.nombre}</TableCell>
+                <TableCell>
+                  {producto.categoria ? (
+                    <Badge variant="outline">{producto.categoria.nombre}</Badge>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">—</span>
+                  )}
+                </TableCell>
                 <TableCell>
                   {formatCurrency(Number(producto.precioVenta))}
                 </TableCell>

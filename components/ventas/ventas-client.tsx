@@ -19,6 +19,7 @@ interface Venta {
   estado: string;
   creadoEl: string;
   vendedor: { nombre: string };
+  cliente?: { nombre: string } | null;
   _count: { items: number };
 }
 

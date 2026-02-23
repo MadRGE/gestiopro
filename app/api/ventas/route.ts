@@ -12,6 +12,7 @@ export async function GET() {
       where: { negocioId },
       include: {
         vendedor: { select: { nombre: true } },
+        cliente: { select: { nombre: true } },
         _count: { select: { items: true } },
       },
       orderBy: { creadoEl: "desc" },
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
     const { session, negocioId } = result;
 
     const body = await req.json();
-    const { items, metodoPago } = body;
+    const { items, metodoPago, clienteId, descuento } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -87,15 +88,21 @@ export async function POST(req: Request) {
         });
       }
 
+      // Apply discount
+      const descuentoNum = descuento ? parseFloat(descuento) : 0;
+      const totalFinal = Math.max(0, total - descuentoNum);
+
       // Crear venta con items
       return tx.venta.create({
         data: {
           numero,
-          total,
+          total: totalFinal,
+          descuento: descuentoNum,
           metodoPago: metodoPago || "EFECTIVO",
           estado: "COMPLETADA",
           negocioId,
           vendedorId: session.user!.id!,
+          clienteId: clienteId || null,
           items: { create: itemsData },
         },
         include: {

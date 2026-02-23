@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession } from "@/lib/auth-api";
+import { getAuthSession, requireRole } from "@/lib/auth-api";
 
 export async function GET(
   _req: Request,
@@ -17,6 +17,7 @@ export async function GET(
       include: {
         items: { include: { producto: { select: { nombre: true } } } },
         vendedor: { select: { nombre: true } },
+        cliente: { select: { nombre: true } },
       },
     });
 
@@ -43,7 +44,11 @@ export async function PATCH(
   try {
     const result = await getAuthSession();
     if ("error" in result) return result.error;
-    const { negocioId } = result;
+    const { negocioId, rol } = result;
+
+    const denied = requireRole(rol, "DUENIO");
+    if (denied) return denied;
+
     const { id } = await params;
 
     const venta = await prisma.$transaction(async (tx) => {

@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession } from "@/lib/auth-api";
+import { getAuthSession, requireRole } from "@/lib/auth-api";
 
 export async function GET(req: NextRequest) {
   try {
     const result = await getAuthSession();
     if ("error" in result) return result.error;
-    const { negocioId } = result;
+    const { negocioId, rol } = result;
+
+    const denied = requireRole(rol, "DUENIO");
+    if (denied) return denied;
 
     const dias = Number(req.nextUrl.searchParams.get("dias") ?? "7");
     const desde = new Date();

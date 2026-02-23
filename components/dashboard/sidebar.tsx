@@ -10,18 +10,31 @@ import {
   BarChart3,
   Settings,
   Store,
+  Tag,
+  Wallet,
+  Users,
+  UserCog,
 } from "lucide-react";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Productos", href: "/dashboard/productos", icon: Package },
-  { name: "Ventas", href: "/dashboard/ventas", icon: ShoppingCart },
-  { name: "Reportes", href: "/dashboard/reportes", icon: BarChart3 },
-  { name: "Configuración", href: "/dashboard/configuracion", icon: Settings },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN", "DUENIO", "EMPLEADO"] },
+  { name: "Productos", href: "/dashboard/productos", icon: Package, roles: ["ADMIN", "DUENIO", "EMPLEADO"] },
+  { name: "Categorías", href: "/dashboard/categorias", icon: Tag, roles: ["ADMIN", "DUENIO"] },
+  { name: "Ventas", href: "/dashboard/ventas", icon: ShoppingCart, roles: ["ADMIN", "DUENIO", "EMPLEADO"] },
+  { name: "Caja", href: "/dashboard/caja", icon: Wallet, roles: ["ADMIN", "DUENIO", "EMPLEADO"] },
+  { name: "Clientes", href: "/dashboard/clientes", icon: Users, roles: ["ADMIN", "DUENIO"] },
+  { name: "Reportes", href: "/dashboard/reportes", icon: BarChart3, roles: ["ADMIN", "DUENIO"] },
+  { name: "Empleados", href: "/dashboard/empleados", icon: UserCog, roles: ["ADMIN", "DUENIO"] },
+  { name: "Configuración", href: "/dashboard/configuracion", icon: Settings, roles: ["ADMIN", "DUENIO"] },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  rol: string;
+}
+
+export function Sidebar({ rol }: SidebarProps) {
   const pathname = usePathname();
+  const filteredNav = navigation.filter((item) => item.roles.includes(rol));
 
   return (
     <aside className="hidden w-64 flex-col border-r border-border bg-card lg:flex">
@@ -34,7 +47,7 @@ export function Sidebar() {
         </span>
       </div>
       <nav className="flex-1 space-y-1 p-4">
-        {navigation.map((item) => {
+        {filteredNav.map((item) => {
           const isActive =
             pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(item.href));

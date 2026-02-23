@@ -11,10 +11,12 @@ interface VentaTicket {
   id: string;
   numero: number;
   total: number | string;
+  descuento: number | string;
   metodoPago: string;
   estado: string;
   creadoEl: string;
   vendedor: { nombre: string };
+  cliente?: { nombre: string } | null;
   items: Array<{
     id: string;
     cantidad: number;
@@ -160,6 +162,12 @@ export default function TicketPage() {
                   {metodoPagoLabel[venta.metodoPago] || venta.metodoPago}
                 </span>
               </div>
+              {venta.cliente && (
+                <div className="flex justify-between">
+                  <span>Cliente</span>
+                  <span>{venta.cliente.nombre}</span>
+                </div>
+              )}
             </div>
 
             <div className="border-t border-dashed border-gray-400 my-2" />
@@ -191,6 +199,22 @@ export default function TicketPage() {
 
             <div className="border-t border-dashed border-gray-400 my-2" />
 
+            {Number(venta.descuento) > 0 && (
+              <>
+                <div className="flex justify-between text-xs">
+                  <span>Subtotal</span>
+                  <span>
+                    {formatCurrency(
+                      Number(venta.total) + Number(venta.descuento)
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between text-xs text-red-600">
+                  <span>Descuento</span>
+                  <span>-{formatCurrency(Number(venta.descuento))}</span>
+                </div>
+              </>
+            )}
             <div className="flex justify-between font-bold text-base">
               <span>TOTAL</span>
               <span>{formatCurrency(Number(venta.total))}</span>

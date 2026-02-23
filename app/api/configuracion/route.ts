@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthSession } from "@/lib/auth-api";
+import { getAuthSession, requireRole } from "@/lib/auth-api";
 
 export async function GET() {
   try {
@@ -33,7 +33,10 @@ export async function PUT(req: NextRequest) {
   try {
     const result = await getAuthSession();
     if ("error" in result) return result.error;
-    const { negocioId } = result;
+    const { negocioId, rol } = result;
+
+    const denied = requireRole(rol, "DUENIO");
+    if (denied) return denied;
 
     const body = await req.json();
     const { nombre, direccion, telefono, cuit, condicionFiscal } = body;
