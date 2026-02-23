@@ -90,8 +90,9 @@ export function PosClient() {
         throw new Error(data.error || "Error al crear venta");
       }
 
+      const venta = await res.json();
       toast.success("Venta registrada exitosamente");
-      router.push("/dashboard/ventas");
+      router.push(`/dashboard/ventas/${venta.id}/ticket`);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Error al crear venta"

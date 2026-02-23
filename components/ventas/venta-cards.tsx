@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { XCircle } from "lucide-react";
+import { XCircle, Printer } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 
 interface Venta {
@@ -75,16 +75,31 @@ export function VentaCards({ ventas, onCancel }: VentaCardsProps) {
                 {venta.vendedor.nombre} &middot; {venta._count.items} item(s)
               </p>
             </div>
-            {venta.estado === "COMPLETADA" && (
+            <div className="flex shrink-0 items-center gap-1">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
-                onClick={() => onCancel(venta)}
+                className="h-8 w-8"
+                onClick={() =>
+                  window.open(
+                    `/dashboard/ventas/${venta.id}/ticket`,
+                    "_blank"
+                  )
+                }
               >
-                <XCircle className="h-4 w-4" />
+                <Printer className="h-4 w-4" />
               </Button>
-            )}
+              {venta.estado === "COMPLETADA" && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  onClick={() => onCancel(venta)}
+                >
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       ))}
