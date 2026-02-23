@@ -42,8 +42,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetch("/api/dashboard/stats")
-      .then((res) => res.json())
-      .then((data) => setStats(data))
+      .then((res) => {
+        if (!res.ok) throw new Error("API error");
+        return res.json();
+      })
+      .then((data) => {
+        if (data?.ventasHoy) setStats(data);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -70,7 +75,7 @@ export default function DashboardPage() {
   }
 
   const ventaTrend =
-    stats && stats.ventasAyer.total > 0
+    stats?.ventasAyer?.total && stats.ventasAyer.total > 0
       ? Number(
           (
             ((stats.ventasHoy.total - stats.ventasAyer.total) /
@@ -81,7 +86,7 @@ export default function DashboardPage() {
       : 0;
 
   const txTrend =
-    stats && stats.ventasAyer.cantidad > 0
+    stats?.ventasAyer?.cantidad && stats.ventasAyer.cantidad > 0
       ? Number(
           (
             ((stats.ventasHoy.cantidad - stats.ventasAyer.cantidad) /
@@ -103,7 +108,7 @@ export default function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           title={labels.ventasDelDia}
-          value={formatCurrency(stats?.ventasHoy.total ?? 0)}
+          value={formatCurrency(stats?.ventasHoy?.total ?? 0)}
           description="vs. ayer"
           icon={DollarSign}
           trend={
@@ -114,7 +119,7 @@ export default function DashboardPage() {
         />
         <KpiCard
           title="Transacciones"
-          value={String(stats?.ventasHoy.cantidad ?? 0)}
+          value={String(stats?.ventasHoy?.cantidad ?? 0)}
           description="vs. ayer"
           icon={ShoppingCart}
           trend={
