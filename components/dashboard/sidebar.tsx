@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import type { RubroLabels } from "@/lib/rubro-config";
 import {
   LayoutDashboard,
   Package,
@@ -16,24 +17,28 @@ import {
   UserCog,
 } from "lucide-react";
 
-const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN", "DUENIO", "EMPLEADO"] },
-  { name: "Productos", href: "/dashboard/productos", icon: Package, roles: ["ADMIN", "DUENIO", "EMPLEADO"] },
-  { name: "Categorías", href: "/dashboard/categorias", icon: Tag, roles: ["ADMIN", "DUENIO"] },
-  { name: "Ventas", href: "/dashboard/ventas", icon: ShoppingCart, roles: ["ADMIN", "DUENIO", "EMPLEADO"] },
-  { name: "Caja", href: "/dashboard/caja", icon: Wallet, roles: ["ADMIN", "DUENIO", "EMPLEADO"] },
-  { name: "Clientes", href: "/dashboard/clientes", icon: Users, roles: ["ADMIN", "DUENIO"] },
-  { name: "Reportes", href: "/dashboard/reportes", icon: BarChart3, roles: ["ADMIN", "DUENIO"] },
-  { name: "Empleados", href: "/dashboard/empleados", icon: UserCog, roles: ["ADMIN", "DUENIO"] },
-  { name: "Configuración", href: "/dashboard/configuracion", icon: Settings, roles: ["ADMIN", "DUENIO"] },
-];
+function getNavigation(labels: RubroLabels) {
+  return [
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN", "DUENIO", "EMPLEADO"] },
+    { name: labels.productos, href: "/dashboard/productos", icon: Package, roles: ["ADMIN", "DUENIO", "EMPLEADO"] },
+    { name: labels.categorias, href: "/dashboard/categorias", icon: Tag, roles: ["ADMIN", "DUENIO"] },
+    { name: labels.ventas, href: "/dashboard/ventas", icon: ShoppingCart, roles: ["ADMIN", "DUENIO", "EMPLEADO"] },
+    { name: "Caja", href: "/dashboard/caja", icon: Wallet, roles: ["ADMIN", "DUENIO", "EMPLEADO"] },
+    { name: labels.clientes, href: "/dashboard/clientes", icon: Users, roles: ["ADMIN", "DUENIO"] },
+    { name: "Reportes", href: "/dashboard/reportes", icon: BarChart3, roles: ["ADMIN", "DUENIO"] },
+    { name: "Empleados", href: "/dashboard/empleados", icon: UserCog, roles: ["ADMIN", "DUENIO"] },
+    { name: "Configuración", href: "/dashboard/configuracion", icon: Settings, roles: ["ADMIN", "DUENIO"] },
+  ];
+}
 
 interface SidebarProps {
   rol: string;
+  labels: RubroLabels;
 }
 
-export function Sidebar({ rol }: SidebarProps) {
+export function Sidebar({ rol, labels }: SidebarProps) {
   const pathname = usePathname();
+  const navigation = getNavigation(labels);
   const filteredNav = navigation.filter((item) => item.roles.includes(rol));
 
   return (
@@ -53,7 +58,7 @@ export function Sidebar({ rol }: SidebarProps) {
             (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (
             <Link
-              key={item.name}
+              key={item.href}
               href={item.href}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",

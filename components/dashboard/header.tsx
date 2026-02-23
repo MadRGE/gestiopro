@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { MobileSidebar } from "./mobile-sidebar";
 import { Moon, Sun, LogOut, User, Menu } from "lucide-react";
+import type { RubroLabels } from "@/lib/rubro-config";
 
 interface HeaderProps {
   user: {
@@ -22,9 +23,10 @@ interface HeaderProps {
     image?: string | null;
   };
   rol: string;
+  labels: RubroLabels;
 }
 
-export function Header({ user, rol }: HeaderProps) {
+export function Header({ user, rol, labels }: HeaderProps) {
   const { theme, setTheme } = useTheme();
 
   const initials = user.name
@@ -46,7 +48,7 @@ export function Header({ user, rol }: HeaderProps) {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0">
-            <MobileSidebar rol={rol} />
+            <MobileSidebar rol={rol} labels={labels} />
           </SheetContent>
         </Sheet>
         <h2 className="text-lg font-semibold hidden sm:block">

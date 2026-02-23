@@ -12,6 +12,7 @@ import { RecentSales } from "@/components/dashboard/recent-sales";
 import { StockAlerts } from "@/components/dashboard/stock-alerts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/formatters";
+import { useRubro } from "@/components/providers/rubro-provider";
 
 interface DashboardStats {
   ventasHoy: { total: number; cantidad: number };
@@ -35,6 +36,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
+  const { labels } = useRubro();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -100,7 +102,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          title="Ventas del día"
+          title={labels.ventasDelDia}
           value={formatCurrency(stats?.ventasHoy.total ?? 0)}
           description="vs. ayer"
           icon={DollarSign}
@@ -122,15 +124,15 @@ export default function DashboardPage() {
           }
         />
         <KpiCard
-          title="Productos activos"
+          title={`${labels.productos} activos`}
           value={String(stats?.productosActivos ?? 0)}
           description="en catálogo"
           icon={Package}
         />
         <KpiCard
-          title="Stock bajo"
+          title={labels.stockBajo}
           value={String(stats?.stockBajo ?? 0)}
-          description="productos por reponer"
+          description={`${labels.productos.toLowerCase()} por reponer`}
           icon={AlertTriangle}
           trend={
             stats && stats.stockBajo > 0

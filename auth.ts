@@ -53,10 +53,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         const dbUser = await prisma.usuario.findUnique({
           where: { id: user.id! },
-          select: { rol: true, negocioId: true },
+          select: { rol: true, negocioId: true, negocio: { select: { rubroId: true } } },
         });
         token.rol = dbUser?.rol;
         token.negocioId = dbUser?.negocioId;
+        token.rubroId = dbUser?.negocio?.rubroId ?? null;
       }
       return token;
     },
@@ -67,6 +68,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (session.user as any).rol = token.rol;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (session.user as any).negocioId = token.negocioId;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (session.user as any).rubroId = token.rubroId;
       }
       return session;
     },
