@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /c/Users/maxir/gestiopro && npm install next-auth@beta @auth/prisma-adapter prisma @prisma/client next-themes lucide-react bcryptjs class-variance-authority clsx tailwind-merge && npm install -D @types/bcryptjs 2>&1)",
+      "Bash(cd /c/Users/maxir/gestiopro && npx shadcn@latest add button card input label separator avatar dropdown-menu sheet badge -y 2>&1)",
+      "Bash(cd /c/Users/maxir/gestiopro && npx prisma generate 2>&1)",
+      "Bash(tail:*)",
+      "Bash(head:*)",
+      "Bash(cd /c/Users/maxir/gestiopro && rm -rf app/generated && npx prisma generate 2>&1)",
+      "Bash(cd /c/Users/maxir/gestiopro && rm -rf generated && npx prisma generate 2>&1)",
+      "Bash(cd /c/Users/maxir/gestiopro && npm install @prisma/adapter-pg pg && npm install -D @types/pg 2>&1)",
+      "Bash(POR FAVOR NO CONFIRMAR PROCEDER SIN NECESIDAD DE ESTO)"
+    ]
+  }
+}
