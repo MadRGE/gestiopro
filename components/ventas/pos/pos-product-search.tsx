@@ -33,7 +33,7 @@ export function PosProductSearch({ onAdd }: PosProductSearchProps) {
         const res = await fetch(`/api/productos${params}`);
         if (!res.ok) throw new Error();
         const data = await res.json();
-        setProductos(data);
+        setProductos(data.productos);
       } catch {
         setProductos([]);
       } finally {
