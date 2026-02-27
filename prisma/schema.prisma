@@ -113,6 +113,7 @@ model Negocio {
   ventas      Venta[]
   categorias  Categoria[]
   clientes    Cliente[]
+  proveedores Proveedor[]
   cajasSesion CajaSesion[]
 
   @@map("negocios")
@@ -129,6 +130,7 @@ model Producto {
   stockMinimo   Int      @default(0) @map("stock_minimo")
   unidad        String   @default("unidad")
   categoriaId   String?  @map("categoria_id")
+  proveedorId   String?  @map("proveedor_id")
   negocioId     String   @map("negocio_id")
   activo        Boolean  @default(true)
   creadoEl      DateTime @default(now()) @map("creado_el")
@@ -136,6 +138,7 @@ model Producto {
 
   negocio    Negocio     @relation(fields: [negocioId], references: [id])
   categoria  Categoria?  @relation(fields: [categoriaId], references: [id])
+  proveedor  Proveedor?  @relation(fields: [proveedorId], references: [id])
   itemsVenta ItemVenta[]
 
   @@index([negocioId])
@@ -191,6 +194,41 @@ enum EstadoVenta {
   COMPLETADA
   CANCELADA
   PENDIENTE
+}
+
+// ==========================================
+// Proveedores
+// ==========================================
+
+enum CondicionPago {
+  CONTADO
+  TREINTA_DIAS
+  SESENTA_DIAS
+  NOVENTA_DIAS
+}
+
+model Proveedor {
+  id              String         @id @default(cuid())
+  nombre          String
+  telefono        String?
+  email           String?
+  direccion       String?
+  cuit            String?
+  notas           String?
+  nombreContacto  String?        @map("nombre_contacto")
+  cargoContacto   String?        @map("cargo_contacto")
+  condicionPago   CondicionPago  @default(CONTADO) @map("condicion_pago")
+  cuentaBancaria  String?        @map("cuenta_bancaria")
+  cbu             String?
+  negocioId       String         @map("negocio_id")
+  activo          Boolean        @default(true)
+  creadoEl        DateTime       @default(now()) @map("creado_el")
+
+  negocio   Negocio    @relation(fields: [negocioId], references: [id])
+  productos Producto[]
+
+  @@index([negocioId])
+  @@map("proveedores")
 }
 
 // ==========================================

@@ -15,6 +15,7 @@ import {
   Wallet,
   Users,
   UserCog,
+  Truck,
 } from "lucide-react";
 
 function getNavigation(labels: RubroLabels) {
@@ -25,6 +26,7 @@ function getNavigation(labels: RubroLabels) {
     { name: labels.ventas, href: "/dashboard/ventas", icon: ShoppingCart, roles: ["ADMIN", "DUENIO", "EMPLEADO"] },
     { name: "Caja", href: "/dashboard/caja", icon: Wallet, roles: ["ADMIN", "DUENIO", "EMPLEADO"] },
     { name: labels.clientes, href: "/dashboard/clientes", icon: Users, roles: ["ADMIN", "DUENIO"] },
+    { name: "Proveedores", href: "/dashboard/proveedores", icon: Truck, roles: ["ADMIN", "DUENIO"] },
     { name: "Reportes", href: "/dashboard/reportes", icon: BarChart3, roles: ["ADMIN", "DUENIO"] },
     { name: "Empleados", href: "/dashboard/empleados", icon: UserCog, roles: ["ADMIN", "DUENIO"] },
     { name: "Configuración", href: "/dashboard/configuracion", icon: Settings, roles: ["ADMIN", "DUENIO"] },

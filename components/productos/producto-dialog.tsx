@@ -31,9 +31,15 @@ interface Producto {
   stockMinimo: number;
   unidad: string;
   categoriaId?: string | null;
+  proveedorId?: string | null;
 }
 
 interface Categoria {
+  id: string;
+  nombre: string;
+}
+
+interface ProveedorOption {
   id: string;
   nombre: string;
 }
@@ -72,7 +78,9 @@ export function ProductoDialog({
   const [stockMinimo, setStockMinimo] = useState("");
   const [unidad, setUnidad] = useState("unidad");
   const [categoriaId, setCategoriaId] = useState("");
+  const [proveedorId, setProveedorId] = useState("");
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [proveedores, setProveedores] = useState<ProveedorOption[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -81,6 +89,11 @@ export function ProductoDialog({
       fetch("/api/categorias")
         .then((r) => r.json())
         .then((data) => { if (Array.isArray(data)) setCategorias(data); })
+        .catch(() => {});
+
+      fetch("/api/proveedores?limit=50")
+        .then((r) => r.json())
+        .then((data) => { if (data.proveedores) setProveedores(data.proveedores); })
         .catch(() => {});
 
       if (producto) {
@@ -93,6 +106,7 @@ export function ProductoDialog({
         setStockMinimo(String(producto.stockMinimo));
         setUnidad(producto.unidad);
         setCategoriaId(producto.categoriaId || "");
+        setProveedorId(producto.proveedorId || "");
       } else {
         setNombre("");
         setDescripcion("");
@@ -103,6 +117,7 @@ export function ProductoDialog({
         setStockMinimo("");
         setUnidad("unidad");
         setCategoriaId("");
+        setProveedorId("");
       }
       setError("");
     }
@@ -123,6 +138,7 @@ export function ProductoDialog({
       stockMinimo: stockMinimo ? parseInt(stockMinimo) : 0,
       unidad,
       categoriaId: categoriaId || null,
+      proveedorId: proveedorId || null,
     };
 
     try {
@@ -289,6 +305,28 @@ export function ProductoDialog({
               </div>
             )}
           </div>
+
+          {proveedores.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="proveedor">Proveedor</Label>
+              <Select
+                value={proveedorId || "none"}
+                onValueChange={(v) => setProveedorId(v === "none" ? "" : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sin proveedor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin proveedor</SelectItem>
+                  {proveedores.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-2">
             <Button

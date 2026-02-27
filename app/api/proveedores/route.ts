@@ -1,17 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthSession, requireRole } from "@/lib/auth-api";
-import { productoCreateSchema } from "@/lib/validations";
+import { proveedorCreateSchema, validateBody } from "@/lib/validations";
 
 export async function GET(req: Request) {
   try {
     const result = await getAuthSession();
     if ("error" in result) return result.error;
-    const { negocioId } = result;
+    const { negocioId, rol } = result;
+
+    const denied = requireRole(rol, "DUENIO");
+    if (denied) return denied;
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
-    const categoriaId = searchParams.get("categoriaId") || "";
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
     const limit = Math.max(1, Math.min(50, Number(searchParams.get("limit")) || 20));
 
@@ -21,32 +23,27 @@ export async function GET(req: Request) {
       ...(search
         ? { nombre: { contains: search, mode: "insensitive" as const } }
         : {}),
-      ...(categoriaId ? { categoriaId } : {}),
     };
 
-    const [productos, total] = await Promise.all([
-      prisma.producto.findMany({
+    const [proveedores, total] = await Promise.all([
+      prisma.proveedor.findMany({
         where,
-        include: {
-          categoria: { select: { nombre: true } },
-          proveedor: { select: { id: true, nombre: true } },
-        },
         orderBy: { creadoEl: "desc" },
         skip: (page - 1) * limit,
         take: limit,
       }),
-      prisma.producto.count({ where }),
+      prisma.proveedor.count({ where }),
     ]);
 
     return NextResponse.json({
-      productos,
+      proveedores,
       total,
       page,
       totalPages: Math.ceil(total / limit),
     });
   } catch {
     return NextResponse.json(
-      { error: "Error al obtener productos" },
+      { error: "Error al obtener proveedores" },
       { status: 500 }
     );
   }
@@ -62,32 +59,20 @@ export async function POST(req: Request) {
     if (denied) return denied;
 
     const body = await req.json();
-    const parsed = productoCreateSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
-    }
-    const { nombre, descripcion, codigoBarras, precioCompra, precioVenta, stock, stockMinimo, unidad, categoriaId, proveedorId } = parsed.data;
+    const parsed = validateBody(proveedorCreateSchema, body);
+    if (parsed.error) return parsed.error;
 
-    const producto = await prisma.producto.create({
+    const proveedor = await prisma.proveedor.create({
       data: {
-        nombre,
-        descripcion: descripcion || null,
-        codigoBarras: codigoBarras || null,
-        precioCompra,
-        precioVenta,
-        stock,
-        stockMinimo,
-        unidad,
-        categoriaId: categoriaId || null,
-        proveedorId: proveedorId || null,
+        ...parsed.data,
         negocioId,
       },
     });
 
-    return NextResponse.json(producto, { status: 201 });
+    return NextResponse.json(proveedor, { status: 201 });
   } catch {
     return NextResponse.json(
-      { error: "Error al crear producto" },
+      { error: "Error al crear proveedor" },
       { status: 500 }
     );
   }
