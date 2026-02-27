@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthSession, requireRole } from "@/lib/auth-api";
-import { productoUpdateSchema } from "@/lib/validations";
+import { proveedorUpdateSchema, validateBody } from "@/lib/validations";
 
 export async function PUT(
   req: Request,
@@ -17,44 +17,30 @@ export async function PUT(
 
     const { id } = await params;
 
-    const existing = await prisma.producto.findFirst({
+    const existing = await prisma.proveedor.findFirst({
       where: { id, negocioId },
     });
 
     if (!existing) {
       return NextResponse.json(
-        { error: "Producto no encontrado" },
+        { error: "Proveedor no encontrado" },
         { status: 404 }
       );
     }
 
     const body = await req.json();
-    const parsed = productoUpdateSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
-    }
-    const { nombre, descripcion, codigoBarras, precioCompra, precioVenta, stock, stockMinimo, unidad, categoriaId, proveedorId } = parsed.data;
+    const parsed = validateBody(proveedorUpdateSchema, body);
+    if (parsed.error) return parsed.error;
 
-    const producto = await prisma.producto.update({
+    const proveedor = await prisma.proveedor.update({
       where: { id },
-      data: {
-        nombre,
-        descripcion: descripcion || null,
-        codigoBarras: codigoBarras || null,
-        precioCompra,
-        precioVenta,
-        stock: stock ?? existing.stock,
-        stockMinimo: stockMinimo ?? existing.stockMinimo,
-        unidad,
-        categoriaId: categoriaId !== undefined ? (categoriaId || null) : existing.categoriaId,
-        proveedorId: proveedorId !== undefined ? (proveedorId || null) : existing.proveedorId,
-      },
+      data: parsed.data,
     });
 
-    return NextResponse.json(producto);
+    return NextResponse.json(proveedor);
   } catch {
     return NextResponse.json(
-      { error: "Error al actualizar producto" },
+      { error: "Error al actualizar proveedor" },
       { status: 500 }
     );
   }
@@ -74,18 +60,18 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const existing = await prisma.producto.findFirst({
+    const existing = await prisma.proveedor.findFirst({
       where: { id, negocioId },
     });
 
     if (!existing) {
       return NextResponse.json(
-        { error: "Producto no encontrado" },
+        { error: "Proveedor no encontrado" },
         { status: 404 }
       );
     }
 
-    await prisma.producto.update({
+    await prisma.proveedor.update({
       where: { id },
       data: { activo: false },
     });
@@ -93,7 +79,7 @@ export async function DELETE(
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json(
-      { error: "Error al eliminar producto" },
+      { error: "Error al eliminar proveedor" },
       { status: 500 }
     );
   }

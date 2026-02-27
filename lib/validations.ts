@@ -28,6 +28,7 @@ export const productoCreateSchema = z.object({
   stockMinimo: z.number().int().min(0).optional().default(0),
   unidad: z.string().optional().default("unidad"),
   categoriaId: z.string().nullable().optional(),
+  proveedorId: z.string().nullable().optional(),
 });
 
 export const productoUpdateSchema = productoCreateSchema;
@@ -78,6 +79,66 @@ export const cajaMovimientoSchema = z.object({
   ]),
   descripcion: z.string().nullable().optional(),
 });
+
+// Proveedores
+export const proveedorCreateSchema = z.object({
+  nombre: z
+    .string()
+    .min(1, "El nombre es requerido")
+    .transform((v) => v.trim()),
+  telefono: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v?.trim() || null),
+  email: z
+    .string()
+    .email("Email inválido")
+    .nullable()
+    .optional()
+    .transform((v) => v?.trim() || null),
+  direccion: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v?.trim() || null),
+  cuit: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v?.trim() || null),
+  notas: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v?.trim() || null),
+  nombreContacto: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v?.trim() || null),
+  cargoContacto: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v?.trim() || null),
+  condicionPago: z
+    .enum(["CONTADO", "TREINTA_DIAS", "SESENTA_DIAS", "NOVENTA_DIAS"])
+    .optional()
+    .default("CONTADO"),
+  cuentaBancaria: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v?.trim() || null),
+  cbu: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((v) => v?.trim() || null),
+});
+
+export const proveedorUpdateSchema = proveedorCreateSchema;
 
 // Empleados
 export const empleadoCreateSchema = z.object({
